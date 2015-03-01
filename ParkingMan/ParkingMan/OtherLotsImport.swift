@@ -30,24 +30,25 @@ class OtherLotsImport: NSObject{
         
         // Variable Setup
         var auburl: NSURL = NSURL(string: vars.auburnLotsURL)!
-        var birurl: NSURL = NSURL(string: vars.birminghamLotsURL)!
+        //var birurl: NSURL = NSURL(string: vars.birminghamLotsURL)!
         var aubrequest: NSURLRequest = NSURLRequest(URL: auburl)
-        var birrequest: NSURLRequest = NSURLRequest(URL: birurl)
+        //var birrequest: NSURLRequest = NSURLRequest(URL: birurl)
         let queue1:NSOperationQueue = NSOperationQueue()
-        let queue2:NSOperationQueue = NSOperationQueue()
+        //let queue2:NSOperationQueue = NSOperationQueue()
         
         // Async Requests
         NSURLConnection.sendAsynchronousRequest(aubrequest, queue: queue1, completionHandler:{ (response: NSURLResponse!, data: NSData!, error: NSError!) -> Void in
             var err: NSError
             OtherLotsImport.CoreDataOrtherLotsImport(data)
-            NSURLConnection.sendAsynchronousRequest(birrequest, queue: queue2, completionHandler:{ (response: NSURLResponse!, data: NSData!, error: NSError!) -> Void in
+            // troubleshooting only one request first.
+            /* NSURLConnection.sendAsynchronousRequest(birrequest, queue: queue2, completionHandler:{ (response: NSURLResponse!, data: NSData!, error: NSError!) -> Void in
                 var err: NSError
                 OtherLotsImport.CoreDataOrtherLotsImport(data)
                 dispatch_async(dispatch_get_main_queue(), {
                     vc.updateTrigger()
                     return
                 });
-            })
+            })*/
         })
         
         println("OtherLots Data Pulled")
@@ -57,38 +58,47 @@ class OtherLotsImport: NSObject{
     class func CoreDataOrtherLotsImport(data: NSData){
         
         // Data to String to Array conversion
-        let dataString = NSString(data: data,encoding: NSUTF8StringEncoding)
-        let dataArray = dataString?.componentsSeparatedByString(";") as Array!
+        var dataString = NSString(data: data,encoding: NSUTF8StringEncoding)
+        dataString = dataString?.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceAndNewlineCharacterSet())
+        println(dataString!)
+        
+        var dataArray = dataString!.componentsSeparatedByString(";") as Array!
+        
+        // Drops blank data at end of array (UNSAFE, assumes data will ALWAYS end with extra semicolon)
+        dataArray.removeLast()
         
         var lot: OtherLots!
         var count = 0
+        var numberFormat = NSNumberFormatter()
+        numberFormat.numberStyle = NSNumberFormatterStyle.DecimalStyle
+        
         for item in dataArray{
-            if item as NSString == NSCharacterSet.whitespaceAndNewlineCharacterSet() {
-                continue
-            }
             switch count{
-            case 0:
-                let predicate = NSPredicate(format: "provider == %@", item.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceAndNewlineCharacterSet()))
+            case 0:                             // Provider
+                let predicate = NSPredicate(format: "provider == %@", item as String)
                 vars.fetchRequest.predicate = predicate
                 let fetchResults = vars.managedContext.executeFetchRequest(vars.fetchRequest, error: nil)!
-                if (!fetchResults.isEmpty){
-                    lot = fetchResults[0] as OtherLots
+                if (fetchResults.isEmpty){
+                    lot = NSEntityDescription.insertNewObjectForEntityForName("OtherLots", inManagedObjectContext: vars.managedContext) as OtherLots
+                    lot.provider = item as String
+                    println("Creating Lot Provider: \(item)");
                 } else {
-                   lot = NSEntityDescription.insertNewObjectForEntityForName("OtherLots", inManagedObjectContext: vars.managedContext) as OtherLots
+                    lot = fetchResults [0] as OtherLots
+                    println("Updating Lot Provider: \(item)")
                 }
-                lot.provider = item.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceAndNewlineCharacterSet())
                 count++
-            case 1:
-                lot.address = item.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceAndNewlineCharacterSet())
+            case 1:                             // Address
+                lot.address = item as String
                 count++
-            case 2:
-                lot.spots = item as NSNumber
+            case 2:                             // Spots
+                lot.spots = numberFormat.numberFromString(item as String)!
                 count++
-            case 3:
-                lot.cost = item as NSDecimalNumber
+            case 3:                             // Cost
+                lot.cost = NSDecimalNumber(string: item as? String)
                 count = 0
             default:
-                println("error!")
+                println("ERROR!")
+            }
         }
         
         // Save after we create all the objects
@@ -97,8 +107,6 @@ class OtherLotsImport: NSObject{
             println("Could not save \(error), \(error?.userInfo)")
             }
         }
-    }
-    
     
     // Returns all lots
     class func allLots() -> Array<OtherLots>{

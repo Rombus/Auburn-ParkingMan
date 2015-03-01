@@ -442,6 +442,7 @@
 				054761A61A98DC520064A937 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		054761A71A98DC520064A937 /* Build configuration list for PBXNativeTarget "ParkingManTests" */ = {
 			isa = XCConfigurationList;
@@ -450,6 +451,7 @@
 				054761A91A98DC520064A937 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 

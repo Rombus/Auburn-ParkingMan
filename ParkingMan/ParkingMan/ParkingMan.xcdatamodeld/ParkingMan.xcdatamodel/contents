@@ -20,6 +20,6 @@
     </entity>
     <elements>
         <element name="CityOfAuburn" positionX="-63" positionY="-18" width="128" height="193"/>
-        <element name="OtherLots" positionX="-54" positionY="63" width="128" height="103"/>
+        <element name="OtherLots" positionX="-54" positionY="63" width="128" height="105"/>
     </elements>
 </model>

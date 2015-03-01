@@ -17,13 +17,13 @@ class ViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        AuburnImport.get(self)
-        // OtherLotsImport.get(self)
+        // AuburnImport.get(self)
+        OtherLotsImport.get(self)
         NSTimer.scheduledTimerWithTimeInterval(30, target: self, selector:Selector("refresh"), userInfo: nil, repeats: true)
         
         func refresh(){
             // Things triggered @ 30 second refresh
-            AuburnImport.get(self)
+            // AuburnImport.get(self)
         }
         
         
